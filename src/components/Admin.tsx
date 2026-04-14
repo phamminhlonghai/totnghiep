@@ -1,6 +1,6 @@
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, FormEvent } from 'react';
 import { motion } from 'motion/react';
-import { Users, ArrowLeft, LogOut, Trash2 } from 'lucide-react';
+import { Users, ArrowLeft, LogOut } from 'lucide-react';
 
 interface RSVP {
   id: number;
@@ -10,7 +10,7 @@ interface RSVP {
   created_at: string;
 }
 
-export default function Admin({ onBack }: { onBack: () => void }) {
+export default function Admin() {
   const [password, setPassword] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
@@ -49,9 +49,9 @@ export default function Admin({ onBack }: { onBack: () => void }) {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-md w-full bg-surface-container p-8 rounded-3xl border border-outline-variant/30 shadow-xl"
         >
-          <button onClick={onBack} className="flex items-center gap-2 text-secondary hover:text-primary mb-6 transition-colors">
+          <a href="/" className="inline-flex items-center gap-2 text-secondary hover:text-primary mb-6 transition-colors">
             <ArrowLeft size={20} /> Back to Home
-          </button>
+          </a>
           <h2 className="text-3xl font-headline font-black text-on-surface mb-6">Admin Login</h2>
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
@@ -88,12 +88,12 @@ export default function Admin({ onBack }: { onBack: () => void }) {
             <p className="text-secondary mt-2">Total registrations: {rsvps.length}</p>
           </div>
           <div className="flex gap-4">
-            <button 
-              onClick={onBack}
+            <a
+              href="/"
               className="px-6 py-2 bg-surface-container border border-outline-variant rounded-lg font-headline font-bold hover:bg-surface-container-high transition-all"
             >
               Home
-            </button>
+            </a>
             <button 
               onClick={() => setIsLoggedIn(false)}
               className="px-6 py-2 bg-primary text-white rounded-lg font-headline font-bold hover:opacity-90 transition-all flex items-center gap-2"

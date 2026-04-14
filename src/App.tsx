@@ -17,10 +17,63 @@ import {
   PenTool,
   Menu as MenuIcon,
   X,
-  Settings
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import Admin from './components/Admin';
+
+// Dialog Component
+type DialogState = { type: 'success' | 'error'; title: string; message: string } | null;
+
+const Dialog = ({ dialog, onClose }: { dialog: DialogState; onClose: () => void }) => {
+  if (!dialog) return null;
+  const isSuccess = dialog.type === 'success';
+  return (
+    <AnimatePresence>
+      <motion.div
+        key="dialog-backdrop"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+        style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}
+        onClick={onClose}
+      >
+        <motion.div
+          key="dialog-box"
+          initial={{ opacity: 0, scale: 0.85, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.85, y: 20 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          onClick={(e) => e.stopPropagation()}
+          className="bg-surface border border-outline-variant/30 rounded-3xl shadow-2xl p-10 max-w-sm w-full text-center relative"
+        >
+          <button
+            onClick={onClose}
+            className="absolute top-5 right-5 text-secondary hover:text-on-surface transition-colors"
+          >
+            <X size={20} />
+          </button>
+          <div className={`w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center ${
+            isSuccess ? 'bg-green-100 text-green-600' : 'bg-red-100 text-primary'
+          }`}>
+            {isSuccess ? <CheckCircle2 size={36} /> : <AlertCircle size={36} />}
+          </div>
+          <h3 className="text-2xl font-headline font-black text-on-surface mb-3">{dialog.title}</h3>
+          <p className="text-secondary leading-relaxed mb-8">{dialog.message}</p>
+          <button
+            onClick={onClose}
+            className={`w-full py-3 rounded-xl font-headline font-bold text-sm uppercase tracking-widest transition-all hover:opacity-90 active:scale-95 ${
+              isSuccess ? 'bg-green-600 text-white' : 'bg-primary text-white'
+            }`}
+          >
+            {isSuccess ? 'Tuyệt vời! 🎉' : 'Đóng'}
+          </button>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
 
 // Countdown Component
 const Countdown = () => {
@@ -84,8 +137,8 @@ const Countdown = () => {
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAdminView, setIsAdminView] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dialog, setDialog] = useState<DialogState>(null);
 
   useEffect(() => {
     // Initial celebration
@@ -102,7 +155,6 @@ export default function App() {
     setIsSubmitting(true);
 
     const form = e.target as HTMLFormElement;
-    const formData = new FormData(form);
     const payload = {
       full_name: (form.querySelector('input[type="text"]') as HTMLInputElement).value,
       attending: (form.querySelector('input[name="attendance"]:checked') as HTMLInputElement)?.value,
@@ -110,7 +162,11 @@ export default function App() {
     };
 
     if (!payload.attending) {
-      alert('Vui lòng chọn trạng thái tham dự!');
+      setDialog({
+        type: 'error',
+        title: 'Chưa chọn tham dự',
+        message: 'Vui lòng chọn trạng thái tham dự trước khi gửi!',
+      });
       setIsSubmitting(false);
       return;
     }
@@ -128,24 +184,34 @@ export default function App() {
           spread: 70,
           origin: { y: 0.6 }
         });
-        alert('Cảm ơn bạn đã phản hồi RSVP!');
+        setDialog({
+          type: 'success',
+          title: 'Cảm ơn bạn! 🎉',
+          message: 'Mình đã nhận được phản hồi của bạn. Hẹn gặp lại tại buổi lễ tốt nghiệp!',
+        });
         form.reset();
       } else {
-        alert('Có lỗi xảy ra khi gửi phản hồi.');
+        const errData = await res.json().catch(() => ({}));
+        setDialog({
+          type: 'error',
+          title: 'Gửi thất bại',
+          message: errData?.error || 'Có lỗi xảy ra khi gửi phản hồi. Vui lòng thử lại.',
+        });
       }
-    } catch (error) {
-      alert('Không thể kết nối đến server.');
+    } catch {
+      setDialog({
+        type: 'error',
+        title: 'Lỗi kết nối',
+        message: 'Không thể kết nối đến server. Vui lòng kiểm tra mạng và thử lại.',
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isAdminView) {
-    return <Admin onBack={() => setIsAdminView(false)} />;
-  }
-
   return (
     <div className="min-h-screen bg-surface selection:bg-primary selection:text-white">
+      <Dialog dialog={dialog} onClose={() => setDialog(null)} />
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-surface/70 backdrop-blur-md shadow-xl shadow-red-900/5">
         <div className="flex justify-between items-center w-full px-8 py-4 max-w-7xl mx-auto">
@@ -527,12 +593,6 @@ export default function App() {
             Cảm ơn AI đã tài trợ trang này :)))
           </div>
           <div className="flex gap-8 items-center">
-            <button 
-              onClick={() => setIsAdminView(true)}
-              className="text-secondary hover:text-primary transition-colors flex items-center gap-2 text-sm font-medium"
-            >
-              <Settings size={16} /> Admin
-            </button>
             <a href="#" className="text-secondary hover:text-primary transition-colors text-sm font-medium">Privacy Policy</a>
             <a href="#" className="text-secondary hover:text-primary transition-colors text-sm font-medium">Technical Archive</a>
             <a href="#" className="text-secondary hover:text-primary transition-colors text-sm font-medium">Contact</a>
