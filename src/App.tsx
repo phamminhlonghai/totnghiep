@@ -16,9 +16,11 @@ import {
   Send as SendIcon,
   PenTool,
   Menu as MenuIcon,
-  X
+  X,
+  Settings
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import Admin from './components/Admin';
 
 // Countdown Component
 const Countdown = () => {
@@ -82,6 +84,8 @@ const Countdown = () => {
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAdminView, setIsAdminView] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     // Initial celebration
@@ -93,15 +97,52 @@ export default function App() {
     });
   }, []);
 
-  const handleRSVP = (e: FormEvent) => {
+  const handleRSVP = async (e: FormEvent) => {
     e.preventDefault();
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
-    alert('Cảm ơn bạn đã phản hồi RSVP!');
+    setIsSubmitting(true);
+
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const payload = {
+      full_name: (form.querySelector('input[type="text"]') as HTMLInputElement).value,
+      attending: (form.querySelector('input[name="attendance"]:checked') as HTMLInputElement)?.value,
+      message: (form.querySelector('textarea') as HTMLTextAreaElement).value,
+    };
+
+    if (!payload.attending) {
+      alert('Vui lòng chọn trạng thái tham dự!');
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/rsvp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+        alert('Cảm ơn bạn đã phản hồi RSVP!');
+        form.reset();
+      } else {
+        alert('Có lỗi xảy ra khi gửi phản hồi.');
+      }
+    } catch (error) {
+      alert('Không thể kết nối đến server.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (isAdminView) {
+    return <Admin onBack={() => setIsAdminView(false)} />;
+  }
 
   return (
     <div className="min-h-screen bg-surface selection:bg-primary selection:text-white">
@@ -461,9 +502,10 @@ export default function App() {
 
               <button 
                 type="submit"
-                className="w-full bg-primary text-white font-headline font-black py-6 rounded-xl text-xl hover:opacity-90 transition-all hover:scale-[1.01] active:scale-95 shadow-xl shadow-red-900/10 flex items-center justify-center gap-3"
+                disabled={isSubmitting}
+                className="w-full bg-primary text-white font-headline font-black py-6 rounded-xl text-xl hover:opacity-90 transition-all hover:scale-[1.01] active:scale-95 shadow-xl shadow-red-900/10 flex items-center justify-center gap-3 disabled:opacity-50"
               >
-                SUBMIT RSVP
+                {isSubmitting ? 'SENDING...' : 'SUBMIT RSVP'}
                 <SendIcon />
               </button>
 
@@ -484,7 +526,13 @@ export default function App() {
           <div className="font-body text-sm tracking-wide text-secondary text-center">
             Cảm ơn AI đã tài trợ trang này :)))
           </div>
-          <div className="flex gap-8">
+          <div className="flex gap-8 items-center">
+            <button 
+              onClick={() => setIsAdminView(true)}
+              className="text-secondary hover:text-primary transition-colors flex items-center gap-2 text-sm font-medium"
+            >
+              <Settings size={16} /> Admin
+            </button>
             <a href="#" className="text-secondary hover:text-primary transition-colors text-sm font-medium">Privacy Policy</a>
             <a href="#" className="text-secondary hover:text-primary transition-colors text-sm font-medium">Technical Archive</a>
             <a href="#" className="text-secondary hover:text-primary transition-colors text-sm font-medium">Contact</a>
