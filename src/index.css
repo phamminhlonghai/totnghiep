@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-headline: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-label: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-primary: #ED1B24;
+  --color-primary-container: #ffdad6;
+  --color-on-primary: #ffffff;
+  --color-surface: #f9f9f9;
+  --color-surface-container: #eeeeee;
+  --color-surface-container-low: #f3f3f3;
+  --color-surface-container-high: #e8e8e8;
+  --color-surface-container-highest: #e2e2e2;
+  --color-on-surface: #1a1c1c;
+  --color-on-surface-variant: #5e3f3c;
+  --color-secondary: #5f5e5e;
+  --color-outline: #936e6a;
+  --color-outline-variant: #e8bcb7;
+
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.5rem;
+  --radius-full: 0.75rem;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-surface font-body text-on-surface selection:bg-primary selection:text-white;
+  }
+}
+
+@layer utilities {
+  .tech-grid {
+    background-image: radial-gradient(circle, #ED1B24 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.05;
+  }
+}
